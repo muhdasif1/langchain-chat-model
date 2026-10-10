@@ -130,8 +130,3 @@ python model.py
 
 The two styles are interchangeable for a simple Q&A: create a model object, call `invoke`, read `.content`.
 
-## Notes
-
-- Keep `.env` out of git. It holds live credentials.
-- `temperature` is only set in the second half of `chatbot.py`. The first OpenAI call and the Gemini script use each provider’s default.
-- These scripts are one-shot chats. They do not keep conversation history between questions.
