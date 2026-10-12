@@ -5,44 +5,40 @@ from langchain.messages import HumanMessage, AIMessage
 
 load_dotenv()
 
-agent = create_agent(model="openai:gpt-6-luna")
+agent = create_agent(
+    model="openai:gpt-6-luna"
+)
 
-# First conversation
-response = agent.invoke({
-    "messages": [
-        HumanMessage(content="What's the capital of the Moon?")
-    ]
-})
+# Store conversation history
+messages = []
 
-print("\n" + "=" * 45)
-print("       FIRST CONVERSATION")
+print("=" * 45)
+print("       AI CHATBOT")
+print("Type 'exit' to quit the chatbot")
 print("=" * 45)
 
-for message in response["messages"]:
-    if isinstance(message, HumanMessage):
-        print(f"\n👤 HUMAN:\n{message.content}")
-    elif isinstance(message, AIMessage):
-        print(f"\n🤖 AI:\n{message.content}")
+while True:
+    # Get input from user
+    user_input = input("\n👤 You: ")
 
-# Second conversation with history
-response = agent.invoke({
-    "messages": [
-        HumanMessage(content="What's the capital of the Moon?"),
-        AIMessage(content="The capital of the Moon is Luna City."),
-        HumanMessage(content="Interesting, tell me more about Luna City")
-    ]
-})
+    # Exit chatbot
+    if user_input.lower().strip() in ["exit", "quit", "bye"]:
+        print("\n🤖 AI: Goodbye! Have a great day.")
+        break
 
-print("\n" + "=" * 45)
-print("       SECOND CONVERSATION")
-print("=" * 45)
+    # Add user's message to conversation
+    messages.append(HumanMessage(content=user_input))
 
-for message in response["messages"]:
-    if isinstance(message, HumanMessage):
-        print(f"\n👤 HUMAN:\n{message.content}")
-    elif isinstance(message, AIMessage):
-        print(f"\n🤖 AI:\n{message.content}")
+    # Get AI response
+    response = agent.invoke({
+        "messages": messages
+    })
 
-print("\n" + "=" * 45)
-print("       CONVERSATION FINISHED")
-print("=" * 45)
+    # Get the latest AI message
+    ai_response = response["messages"][-1].content
+
+    # Display AI response
+    print(f"\n🤖 AI: {ai_response}")
+
+    # Save conversation history
+    messages = response["messages"]
