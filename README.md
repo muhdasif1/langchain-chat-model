@@ -1,132 +1,386 @@
-# LangChain Chat Model Examples
+# LangChain Chat Model
 
-Small Python examples that call large language models through [LangChain](https://python.langchain.com/). There are two scripts:
+Small Python examples that use large language models through [LangChain](https://python.langchain.com/). This project includes three scripts:
 
-- `chatbot.py` — OpenAI chat model via LangChain’s provider-agnostic helper
-- `model.py` — Google Gemini via the dedicated Google Generative AI integration
+- `chatbot.py` — OpenAI chat model examples using LangChain's provider-agnostic helper.
+- `model.py` — Google Gemini using the dedicated Google Generative AI integration.
+- `agent_conversation.py` — An interactive LangChain AI Agent chatbot that keeps conversation history while the program is running.
 
-Both scripts load API keys from a `.env` file, send a prompt to a model, and print the reply.
+The scripts load API keys from a `.env` file, send prompts to a model, and print the replies. The interactive agent lets you continue chatting until you type `exit`, `quit`, or `bye`.
 
-## Project files
+## Project Files
 
 | File | What it does |
 |------|----------------|
-| `chatbot.py` | Initializes an OpenAI model twice: once with a fixed prompt, then again with custom settings and your own question |
-| `model.py` | Initializes Google Gemini and asks a single geography question |
-| `.env` | Stores API keys (keep this file private; never commit real keys) |
+| `chatbot.py` | Initializes an OpenAI model with a fixed prompt, then asks for a question in the terminal using custom settings. |
+| `model.py` | Initializes Google Gemini and asks a single geography question. |
+| `agent_conversation.py` | Creates an OpenAI-powered LangChain Agent, accepts repeated user input, displays each AI reply, and keeps conversation history during the session. |
+| `.env` | Stores API keys. Keep this file private and never commit real keys. |
+| `.gitignore` | Lists files and folders Git should ignore, such as `.env` and `.venv/`. |
 
 ## Setup
 
-1. Create and activate a virtual environment (this project already has `.venv` if you prefer to reuse it).
-2. Install dependencies:
+### 1. Create and activate a virtual environment
+
+Open a terminal in the project root and run:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+If you already have a working `.venv`, you can activate and reuse it.
+
+### 2. Install dependencies
 
 ```bash
 pip install langchain langchain-openai langchain-google-genai python-dotenv
 ```
 
-3. Put your keys in `.env` in the project root:
+### 3. Configure API keys
+
+Create a `.env` file in the project root:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key
 GOOGLE_API_KEY=your_google_api_key
 ```
 
-`python-dotenv` reads these variables when each script starts.
+Only add the keys for the providers you plan to use. Never share your real API keys or commit `.env` to GitHub.
 
-## How the code works
+The `python-dotenv` package reads these variables when `load_dotenv()` runs.
 
-Every script follows the same pattern:
+## How the Code Works
 
-1. Load environment variables so LangChain can authenticate.
-2. Create a chat model object.
-3. Call `invoke(...)` with a string prompt.
-4. Print `response.content` (the text of the model’s reply).
+The scripts follow a similar pattern:
 
-### `chatbot.py`
+1. Load environment variables from `.env`.
+2. Create a chat model or AI Agent.
+3. Send a prompt or conversation messages.
+4. Print the AI response in the terminal.
 
-This file shows two ways to use OpenAI through LangChain.
+## 1. `chatbot.py`
 
-**1. Load secrets**
+This file demonstrates two ways to use OpenAI through LangChain.
+
+### Load environment variables
 
 ```python
 from dotenv import load_dotenv
+
 load_dotenv()
 ```
 
-`load_dotenv()` reads `.env` and sets `OPENAI_API_KEY` in the process environment. LangChain uses that key automatically.
+`load_dotenv()` reads the `.env` file and makes its variables available to the Python process. LangChain uses `OPENAI_API_KEY` to authenticate with OpenAI.
 
-**2. Initialize and invoke (default settings)**
+### Initialize and invoke a model
 
 ```python
 from langchain.chat_models import init_chat_model
+
 model = init_chat_model(model="gpt-6-luna")
+
 response = model.invoke("What can you do?")
+
 print(response.content)
 ```
 
-- `init_chat_model` is LangChain’s helper that picks the right provider from the model name. Here it talks to OpenAI.
-- `invoke` sends one message and waits for a full reply.
-- `response` is a message object; `.content` is the answer text.
+- `init_chat_model()` initializes a chat model.
+- `invoke()` sends a prompt to the model and waits for a reply.
+- `response.content` contains the reply text.
 
-This first block always asks *"What can you do?"* so you can confirm the API works.
+This example asks a fixed question so you can check that the API connection works.
 
-**3. Customize the model and ask your own question**
+### Customize the model and ask your own question
 
 ```python
 model = init_chat_model(
     model="gpt-6-luna",
     temperature=1.0
 )
+
 question = input("Enter your question: ")
+
 response = model.invoke(question)
+
 print(response.content)
 ```
 
-- A new model instance is created with `temperature=1.0`. Temperature controls randomness: closer to `0` is more focused; closer to `1` is more varied.
-- `input(...)` waits for you to type a question in the terminal.
-- That question is sent to the same model family, and the answer is printed.
+- `temperature` controls response variability, where supported by the model.
+- `input()` waits for you to type a question in the terminal.
+- The question is sent to the model, and its answer is printed.
 
-Run it with:
+Run the script:
 
 ```bash
 python chatbot.py
 ```
 
-You will see the first canned reply, then a prompt asking for your own question.
-
-### `model.py`
+## 2. `model.py`
 
 This file uses Google Gemini instead of OpenAI.
 
 ```python
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from langchain_google_genai import ChatGoogleGenerativeAI
-model = ChatGoogleGenerativeAI(model="gemini-3.1-flash-lite")
-response = model.invoke("What's the capital of the Pakistan?")
+
+model = ChatGoogleGenerativeAI(
+    model="gemini-3.1-flash-lite"
+)
+
+response = model.invoke("What's the capital of Pakistan?")
+
 print(response.content)
 ```
 
-- `ChatGoogleGenerativeAI` is the Google-specific chat class (not the generic `init_chat_model` helper).
+- `ChatGoogleGenerativeAI` is the Google-specific LangChain chat model class.
 - It uses `GOOGLE_API_KEY` from `.env`.
-- `gemini-3.1-flash-lite` is a fast, lightweight Gemini model.
-- The script asks a fixed question and prints the answer (Islamabad).
+- The script asks a fixed question and prints the answer.
 
-Run it with:
+Run the script:
 
 ```bash
 python model.py
 ```
 
-## OpenAI vs Google in this project
+## 3. `agent_conversation.py`
 
-| | `chatbot.py` | `model.py` |
-|---|---|---|
-| Library | `langchain.chat_models.init_chat_model` | `langchain_google_genai.ChatGoogleGenerativeAI` |
-| Model | `gpt-6-luna` | `gemini-3.1-flash-lite` |
-| Auth env var | `OPENAI_API_KEY` | `GOOGLE_API_KEY` |
-| Interaction | Fixed prompt, then your typed question | One fixed prompt |
+This file creates an interactive AI Agent using LangChain's `create_agent()` function.
 
-The two styles are interchangeable for a simple Q&A: create a model object, call `invoke`, read `.content`.
+You can enter questions repeatedly, read the AI's replies, and ask follow-up questions using the conversation history. The chatbot continues running until you type `exit`, `quit`, or `bye`.
 
+### Complete Code
+
+```python
+from dotenv import load_dotenv
+from langchain.agents import create_agent
+from langchain.messages import HumanMessage
+
+load_dotenv()
+
+agent = create_agent(
+    model="openai:gpt-6-luna"
+)
+
+# Store conversation history
+messages = []
+
+print("=" * 45)
+print("       AI CHATBOT")
+print("Type 'exit' to quit the chatbot")
+print("=" * 45)
+
+while True:
+    # Get input from user
+    user_input = input("\n👤 You: ")
+
+    # Exit chatbot
+    if user_input.lower().strip() in ["exit", "quit", "bye"]:
+        print("\n🤖 AI: Goodbye! Have a great day.")
+        break
+
+    # Add user's message to conversation
+    messages.append(HumanMessage(content=user_input))
+
+    # Get AI response
+    response = agent.invoke({
+        "messages": messages
+    })
+
+    # Get the latest AI message
+    ai_response = response["messages"][-1].content
+
+    # Display AI response
+    print(f"\n🤖 AI: {ai_response}")
+
+    # Save conversation history
+    messages = response["messages"]
+```
+
+### How It Works
+
+**1. Load environment variables**
+
+```python
+load_dotenv()
+```
+
+Loads the API key from `.env` so the agent can authenticate with the model provider.
+
+**2. Create the AI Agent**
+
+```python
+agent = create_agent(
+    model="openai:gpt-6-luna"
+)
+```
+
+Creates a LangChain Agent configured to use the specified OpenAI model.
+
+**3. Initialize conversation history**
+
+```python
+messages = []
+```
+
+Creates an empty list to store the messages exchanged during the conversation.
+
+**4. Get input from the user**
+
+```python
+user_input = input("\n👤 You: ")
+```
+
+Waits for the user to type a message in the terminal.
+
+**5. Check whether the user wants to exit**
+
+```python
+if user_input.lower().strip() in ["exit", "quit", "bye"]:
+    print("\n🤖 AI: Goodbye! Have a great day.")
+    break
+```
+
+If the user types `exit`, `quit`, or `bye`, the `break` statement stops the loop and ends the chatbot.
+
+**6. Add the user's message**
+
+```python
+messages.append(HumanMessage(content=user_input))
+```
+
+Creates a `HumanMessage` and adds it to the conversation history.
+
+**7. Send messages to the agent**
+
+```python
+response = agent.invoke({
+    "messages": messages
+})
+```
+
+Sends the conversation history to the agent and gets a response.
+
+**8. Extract the AI's latest response**
+
+```python
+ai_response = response["messages"][-1].content
+```
+
+Selects the last message in the returned list and extracts its text.
+
+**9. Display the answer**
+
+```python
+print(f"\n🤖 AI: {ai_response}")
+```
+
+Prints the AI's answer in the terminal with a clear label.
+
+**10. Save the updated conversation history**
+
+```python
+messages = response["messages"]
+```
+
+Stores the returned messages so the next interaction can use the previous conversation as context.
+
+### Why Use a `while` Loop?
+
+The `while True` loop allows the chatbot to continue accepting messages without restarting the program after every question.
+
+The workflow is:
+
+1. User enters a question.
+2. The agent processes the conversation.
+3. The AI responds.
+4. The updated history is saved.
+5. The chatbot waits for another question.
+6. The loop ends when the user enters an exit command.
+
+### Example Terminal Session
+
+```text
+=============================================
+       AI CHATBOT
+Type 'exit' to quit the chatbot
+=============================================
+
+👤 You: What is Python?
+
+🤖 AI: Python is a general-purpose programming language
+known for its readability and simplicity.
+
+👤 You: Why is it popular for AI?
+
+🤖 AI: Python has a rich ecosystem of libraries for
+machine learning and AI development.
+
+👤 You: exit
+
+🤖 AI: Goodbye! Have a great day.
+```
+
+### Run the Agent Chatbot
+
+```bash
+python agent_conversation.py
+```
+
+**Important:** Conversation history is kept in memory while the program is running. It is not saved permanently and is cleared when the program exits.
+
+## OpenAI vs Google in This Project
+
+| Feature | `chatbot.py` | `model.py` | `agent_conversation.py` |
+|---|---|---|---|
+| LangChain interface | `init_chat_model` | `ChatGoogleGenerativeAI` | `create_agent` |
+| Provider | OpenAI | Google | OpenAI |
+| Model configured in example | `gpt-6-luna` | `gemini-3.1-flash-lite` | `openai:gpt-6-luna` |
+| Environment variable | `OPENAI_API_KEY` | `GOOGLE_API_KEY` | `OPENAI_API_KEY` |
+| Interaction | Fixed prompt, then user input | One fixed prompt | Repeated user input with conversation history |
+
+## Security Notes
+
+- Keep `.env` private and never commit real API keys.
+- Add `.env` and `.venv/` to `.gitignore`.
+- Never hardcode API keys in Python source files.
+- API access and model availability depend on your provider account and the exact model IDs available to you.
+
+## Troubleshooting
+
+### Missing OpenAI Credentials
+
+If you see an error saying `OPENAI_API_KEY` is missing:
+
+1. Confirm `.env` is in the project root.
+2. Confirm it contains `OPENAI_API_KEY=your_actual_key`.
+3. Confirm the script calls `load_dotenv()` before creating the model or agent.
+4. Run the script from the project directory.
+5. Ensure the API key is valid and your account has API access.
+
+### Model Not Found or Unavailable
+
+Check that the model ID is correct and available to your API account, and that the required LangChain provider integration is installed.
+
+### Missing Python Package
+
+Activate your virtual environment and install the dependencies:
+
+```bash
+pip install langchain langchain-openai langchain-google-genai python-dotenv
+```
+
+## Learning Outcomes
+
+By exploring this project, you can learn how to:
+
+- Initialize chat models using LangChain.
+- Work with OpenAI and Google Gemini integrations.
+- Send prompts using `invoke()`.
+- Build an interactive AI Agent with `create_agent()`.
+- Handle `HumanMessage` objects and AI responses.
+- Maintain conversation history during a session.
+- Manage API keys securely using environment variables.
