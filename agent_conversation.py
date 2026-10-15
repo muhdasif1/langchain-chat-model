@@ -1,9 +1,8 @@
 
 from dotenv import load_dotenv
+load_dotenv()
 from langchain.agents import create_agent
 from langchain.messages import HumanMessage, AIMessage
-
-load_dotenv()
 
 agent = create_agent(
     model="openai:gpt-6-luna"
